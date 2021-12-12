@@ -1,4 +1,4 @@
-﻿Time(s),Speed  RPM,Torque(Nm)
+﻿Time(s),Speed(RPM),Torque(Nm)
 0,0,0
 0.5,0,0
 1,0,0
