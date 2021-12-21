@@ -1,3 +1,4 @@
+from numpy.lib.arraysetops import unique
 import pandas as pd
 import numpy as np
 
@@ -18,8 +19,8 @@ fcf = fcf.rename({'variable':'Torque'}, axis=1)
 fcf = fcf.rename({'value':'FuelConsumption'}, axis=1)
 
 
-max_speed = df['Speed(RPM)'].max()
-max_torque = df['Torque(Nm)'].max()
+# max_speed = df['Speed(RPM)'].max()
+# max_torque = df['Torque(Nm)'].max()
 
 
 
@@ -49,24 +50,97 @@ def look_up_table(max_speed, min_speed, max_torque, min_torque ):
     if((not filt_is_speed_torque_fc.empty ) and (not filt_is_speed_torque_vd.empty) ):
 
         # Getting fuel consumption from look-up table
-        look_up_fuel_consumption = filt_is_speed_torque_fc.loc[filt_is_speed_torque_fc.index,'FuelConsumption']
-        print(look_up_fuel_consumption)
+        look_up_fuel_consumption = filt_is_speed_torque_fc.iloc[0, 2]
     
-    '''
-    ISSUE WITH 'look_up_fuel_consumption' ERROR: Incompatible indexer with Series
-    '''
-        # for index in filt_is_speed_torque_vd.index:
-        #     df.loc[index, 'FuelConsumption'] = look_up_fuel_consumption
+        for index in filt_is_speed_torque_vd.index:
+            df.loc[index, 'FuelConsumption'] = look_up_fuel_consumption
+
+
+
+unique_speeds = fcf['Speed'].unique()
+unique_speeds.sort()
+
+unique_torque = fcf['Torque'].unique()
+unique_torque.sort()
+
+# Difference between elements in list
+unique_speeds_diff = np.diff(unique_speeds)
+unique_torque_diff = np.diff(unique_torque)
+
+
+max_speed_in_df = df['Speed(RPM)'].max()
+max_torque_in_df = df['Torque(Nm)'].max()
+min_torque_in_df = df['Torque(Nm)'].min()
+
 
 
 # Creating new column with all zeroes
 df['FuelConsumption'] = 0.0
 
-look_up_table(max_speed, 4000, 15, 0)
-look_up_table(4000, 3500, 15, 0)
-look_up_table(3500, 3250, 15, 0)
+print(unique_speeds)
+print(unique_torque)
 
+
+# for num_of_torque in zip(unique_torque)
+
+# look_up_table(50, 0, max_torque, num_of_torque )
+
+
+'''
+Iterating through rows in fuel consumption look-up table and comparing look-up table values
+with df values. If the same, then fuel consumption value is placed in the appropriate index
+'''
+for index, row in fcf.iterrows():
+    for min_speed,min_torque,speed_dif,torque_diff in zip(unique_speeds, unique_torque, unique_speeds_diff, unique_torque_diff):
+
+        # Last elements in array, special condition
+        if(row['Speed'] == 4000 and row['Torque'] == 180):
+            look_up_table(max_speed_in_df, row['Speed'], max_torque_in_df, row['Torque'])
+        
+        # Last element in speed array
+        elif(row['Speed'] == 4000):
+            max_torque = torque_diff + row['Torque']
+            look_up_table(max_speed_in_df, row['Speed'], max_torque, row['Torque'])
+        
+        # Last element in torque array
+        elif(row['Torque'] == 180):
+            max_speed = speed_dif + row['Speed']
+            look_up_table(max_speed, row['Speed'], max_torque_in_df, row['Torque'])
+
+        # Normal condition 
+        else:
+            max_speed = speed_dif + row['Speed']
+            max_torque = torque_diff + row['Torque']
+            look_up_table(max_speed, row['Speed'], max_torque, row['Torque'])
+
+        
+
+            
+                
+# Copying data to a test.csv to see the results
 df.to_csv('test.csv')
+
+
+
+# for index, row in fcf.iterrows():
+    
+#     print(row['Speed'], row['Torque'])
+
+
+
+
+
+
+
+# # Creating new column with all zeroes
+# df['FuelConsumption'] = 0.0
+
+# look_up_table(max_speed, 4000, 15, 0)
+# look_up_table(4000, 3500, 15, 0)
+# look_up_table(3500, 3250, 15, 0)
+
+
+
 
 # filt_index = 
 
